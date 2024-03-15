@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMITE TIMER PRACTICE</title>
+<style>
+    .input-container {
+        display: inline-block;
+        margin-right: 10px; /* Adjust as needed */
+    }
+
+    #result {
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+    <div>
+        <p>F6 to reset!</p>
+        <p>Item: <span id="item-name"></span></p>
+        <p>Game Time: <span id="remaining-time"></span></p>
+        <p>Hint: <span id="hint" style="display: none;"></span></p>
+        <p>Time Taken: <span id="time-taken"></span></p>
+        <p>Fastest Time: <span id="fastest-time"></span></p>
+        <p>Average Time: <span id="average-time"></span></p>
+    </div>
+    <div>
+        <p>Correct Attempts: <span id="correct-attempts">0</span></p>
+        <p>Total Attempts: <span id="total-attempts">0</span></p>
+        <p>Percentage Correct: <span id="percentage">0%</span></p>
+    </div> 
+    <div id="time"> 
+        <span class="digit" id="min"> 
+            00</span> 
+        <span class="txt">:</span> 
+        <span class="digit" id="sec"> 
+            00</span> 
+        <span class="txt">:</span> 
+        <span class="digit" id="count"> 
+            00</span> 
+    </div> 
+    <div class="input-container">
+        <input type="text" maxlength="2" id="input1" placeholder="Minutes">
+    </div>
+    <div class="input-container">
+        <input type="text" maxlength="2" id="input2" placeholder="Seconds">
+    </div>
+
+    <div id="result"></div>
+    <div id="correct-answer" style="display: none;"></div>
+    <button id="toggle-hint">Toggle Hints</button>
+
+    <script>
+        function convertToTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            const paddedMinutes = minutes < 10 ? '0' + minutes : minutes;
+            const paddedSeconds = remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds;
+            return `${paddedMinutes}:${paddedSeconds}`;
+        }
+
+        const itemsData = [
+    { name: "Purple Buff", itemTime: 150, minTime: 150, maxTime: 1800 },
+    { name: "Speed Buff", itemTime: 150, minTime: 150, maxTime: 1800 },
+    { name: "Red Buff", itemTime: 150, minTime: 150, maxTime: 1800 },
+    { name: "Blue Buff", itemTime: 150, minTime: 150, maxTime: 1800 },
+    { name: "Green Buff", itemTime: 150, minTime: 150, maxTime: 1800 },
+    { name: "Back Camps", itemTime: 120, minTime: 120, maxTime: 1800 },
+    { name: "Chest Camps", itemTime: 120, minTime: 120, maxTime: 1800 },
+    { name: "Oracles", itemTime: 90, minTime: 600, maxTime: 1800 },
+    { name: "Mid Camps", itemTime: 60, minTime: 0, maxTime: 540 },
+    { name: "Beacon", itemTime: 360, minTime: 720, maxTime: 3000 },
+    { name: "Pyromancer", itemTime: 240, minTime: 720, maxTime: 3000 },
+    { name: "Gold Fury", itemTime: 240, minTime: 300, maxTime: 3000 },
+    { name: "Firegant", itemTime: 300, minTime: 600, maxTime: 3000 },
+    { name: "T1 Aegis", itemTime: 170, minTime: 0, maxTime: 1200 },
+    { name: "T2 Aegis", itemTime: 140, minTime: 480, maxTime: 3000 },
+    { name: "T1 Beads", itemTime: 170, minTime: 0, maxTime: 1200 },
+    { name: "T2 Beads", itemTime: 140, minTime: 480, maxTime: 3000 },
+    { name: "T1 Divine Barrier", itemTime: 110, minTime: 0, maxTime: 1200 },
+    { name: "T2 Divine Barrier", itemTime: 90, minTime: 480, maxTime: 3000 },
+    { name: "T1 Blink", itemTime: 140, minTime: 0, maxTime: 1200 },
+    { name: "T2 Blink", itemTime: 120, minTime: 480, maxTime: 3000 },
+    { name: "T1 Bracer", itemTime: 120, minTime: 0, maxTime: 1200 },
+    { name: "T2 Bracer", itemTime: 100, minTime: 480, maxTime: 3000 },
+    { name: "T1 Meditation", itemTime: 150, minTime: 0, maxTime: 1200 },
+    { name: "T2 Meditation", itemTime: 130, minTime: 480, maxTime: 3000 },
+    { name: "T1 Horrific", itemTime: 140, minTime: 0, maxTime: 1200 },
+    { name: "T2 Horrific", itemTime: 120, minTime: 480, maxTime: 3000 },
+    { name: "T1 Shell", itemTime: 150, minTime: 0, maxTime: 1200 },
+    { name: "T2 Shell", itemTime: 130, minTime: 480, maxTime: 3000 },
+    { name: "T1 Thorns", itemTime: 140, minTime: 0, maxTime: 1200 },
+    { name: "T2 Thorns", itemTime: 120, minTime: 480, maxTime: 3000 },
+    { name: "T1 Sunder", itemTime: 150, minTime: 0, maxTime: 1200 },
+    { name: "T2 Sunder", itemTime: 130, minTime: 480, maxTime: 3000 },
+    { name: "T1 Teleport", itemTime: 220, minTime: 0, maxTime: 3000 },
+    { name: "T2 Teleport", itemTime: 180, minTime: 480, maxTime: 1200 },
+    { name: "T3 Teleport", itemTime: 110, minTime: 480, maxTime: 3000 },
+    { name: "Horn Shard", itemTime: 120, minTime: 0, maxTime: 900 }
+];
+
+        const input1 = document.getElementById("input1");
+        const input2 = document.getElementById("input2");
+        const resultDisplay = document.getElementById("result");
+        const correctAnswerDisplay = document.getElementById("correct-answer");
+        const remainingTimeDisplay = document.getElementById("remaining-time");
+        const totalAttemptsDisplay = document.getElementById("total-attempts");
+        const correctAttemptsDisplay = document.getElementById("correct-attempts");
+        const percentageDisplay = document.getElementById("percentage");
+        const hintDisplay = document.getElementById("hint");
+        const hintToggleBtn = document.getElementById("toggle-hint");
+        const timeTakenDisplay = document.getElementById("time-taken");
+        const fastestTimeDisplay = document.getElementById("fastest-time");
+        const averageTimeDisplay = document.getElementById("average-time");
+        const activeTimerDisplay = document.getElementById("active-timer");
+
+        let totalAttempts = 0;
+        let correctAttempts = 0;
+        let incorrectTries = 0;
+        let fastestTime = Infinity;
+        let totalResponseTime = 0;
+        let averageTime = 0;
+        let activeTimeMilliseconds = 0;
+        let activeTimerInterval;
+        let remainingItems = itemsData.slice();
+        let itemData = null;
+        let hour = 0;
+        let minute = 0;
+        let second = 0;
+        let count = 0;
+        let timer = true;
+        let timerStartCount = 0;
+
+        function stopWatch() { 
+            if (timer) { 
+                count++; 
+
+                if (count == 100) { 
+                    second++; 
+                    count = 0; 
+                } 
+
+                if (second == 60) { 
+                    minute++; 
+                    second = 0; 
+                } 
+
+                if (minute == 60) { 
+                    hour++; 
+                    minute = 0; 
+                    second = 0; 
+                } 
+
+                let hrString = hour; 
+                let minString = minute; 
+                let secString = second; 
+                let countString = count; 
+
+                if (hour < 10) { 
+                    hrString = "0" + hrString; 
+                } 
+
+                if (minute < 10) { 
+                    minString = "0" + minString; 
+                } 
+
+                if (second < 10) { 
+                    secString = "0" + secString; 
+                } 
+
+                if (count < 10) { 
+                    countString = "0" + countString; 
+                } 
+
+                document.getElementById('min').innerHTML = minString; 
+                document.getElementById('sec').innerHTML = secString; 
+                document.getElementById('count').innerHTML = countString; 
+                setTimeout(stopWatch, 10); 
+            } 
+        }
+
+        function updatePercentage() {
+            const percentage = totalAttempts === 0 ? 0 : ((correctAttempts / totalAttempts) * 100).toFixed(2);
+            percentageDisplay.textContent = percentage + "%";
+        }
+
+
+        const maxIncorrectTries = 3;
+        let targetNumber, randItem, startTime; 
+
+        function getRandomItemIndex() {
+            return Math.floor(Math.random() * remainingItems.length);
+        }
+
+        function calculateRemainingTime(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        function fullResetGame() {
+            timer = true;
+            document.getElementById('min').innerHTML = "00"; 
+            document.getElementById('sec').innerHTML = "00"; 
+            document.getElementById('count').innerHTML = "00"; 
+            remainingItems = itemsData.slice();
+            
+            fastestTime = Infinity;
+            averageTime = 0;
+            totalAttempts = 0;
+            correctAttempts = 0;
+            fastestTimeDisplay.textContent = convertToTime(fastestTime);
+            averageTimeDisplay.textContent = convertToTime(averageTime);
+            totalAttemptsDisplay.textContent = totalAttempts;
+            correctAttemptsDisplay.textContent = correctAttempts;
+            percentageDisplay.textContent = "0%";
+            // Disable the text boxes
+            input1.disabled = false;
+            input2.disabled = false;
+            resetGame();
+        }
+        function displayGameOver() {
+            timer = false;
+            timerStartCount = 0;
+            gameIsOver = true; // Set gameIsOver to true
+            // Remove any existing reset button if it exists
+            const existingResetText = document.getElementById("reset-text");
+            if (existingResetText) {
+                existingResetText.remove();
+            }
+
+            const gameOverText = document.createElement("p");
+            gameOverText.textContent = "Game Over";
+            document.body.appendChild(gameOverText);
+
+            const resetText = document.createElement("p");
+            resetText.textContent = "To restart, press F6";
+            resetText.id = "reset-text"; // Set an id for easy removal later
+            document.body.appendChild(resetText);
+            // Disable the text boxes
+            input1.disabled = true;
+            input2.disabled = true;
+        }
+
+        function resetGame() {
+            if(timerStartCount < 1){
+                stopWatch();
+            }
+            timerStartCount++;
+            gameIsOver = false; // Reset gameIsOver
+            if(remainingItems.length === 0){
+                displayGameOver();
+            } else {
+                randItem = getRandomItemIndex(); 
+                itemData = remainingItems[randItem];
+                console.log("Remaining Items");
+                console.log(remainingItems.length);
+                console.log("Current Item Name");
+                console.log(itemData.name);
+
+                document.getElementById("item-name").textContent = itemData.name; 
+                const min = itemData.minTime; 
+                const max = itemData.maxTime; 
+                const remainingTime = calculateRemainingTime(min, max);
+                targetNumber = 0;
+                console.log(convertToTime(targetNumber));
+                remainingTimeDisplay.textContent = convertToTime(remainingTime); 
+                totalAttemptsDisplay.textContent = totalAttempts;
+                correctAnswerDisplay.style.display = "none"; 
+                incorrectTries = 0; 
+                hintDisplay.textContent = `Time: ${convertToTime(itemData.itemTime)} (${itemData.itemTime} seconds)`; 
+                resultDisplay.textContent = ""; 
+                startTime = Date.now(); 
+                updatePercentage();
+                remainingItems.splice(randItem, 1);        
+            }
+        }
+
+        resetGame();
+
+        input1.addEventListener("input", function() {
+            if (input1.value.length === 2) {
+                input2.focus();
+            }
+        });
+
+        input2.addEventListener("input", function() {
+            if (input2.value.length === 2) {
+                const totalSeconds = parseInt(input1.value) * 60 + parseInt(input2.value);
+                remainingTimeDisplay.textContent = convertToTime(targetNumber);
+                checkValue(totalSeconds);
+                setTimeout(function() {
+                    input1.focus();
+                }, 100);
+                input1.value = "";
+                input2.value = "";
+            }
+        });
+
+        hintToggleBtn.addEventListener("click", function() {
+            hintDisplay.style.display = hintDisplay.style.display === "none" ? "inline" : "none";
+        });
+
+        function checkValue(totalSeconds) {
+            const remainingTime = targetNumber - itemData.itemTime; 
+            const endTime = Date.now(); 
+
+            if (totalSeconds === targetNumber) {
+                const elapsedTime = (endTime - startTime) / 1000; 
+
+                timeTakenDisplay.textContent = convertToTime(elapsedTime);
+
+                if (elapsedTime < fastestTime) {
+                    fastestTime = elapsedTime;
+                    fastestTimeDisplay.textContent = convertToTime(fastestTime);
+                }
+
+                totalResponseTime += elapsedTime;
+                averageTime = totalResponseTime / correctAttempts;
+                averageTimeDisplay.textContent = convertToTime(averageTime);
+
+                resultDisplay.textContent = "You are right!";
+                correctAttempts++;
+                totalAttempts++;
+                correctAttemptsDisplay.textContent = correctAttempts;
+                updatePercentage();
+                resetGame(); 
+                setTimeout(function() {
+                    resultDisplay.textContent = ""; 
+                }, 3000); 
+            } else {
+                resultDisplay.textContent = "Wrong!";
+                totalAttempts++;
+                totalAttemptsDisplay.textContent = totalAttempts;
+                updatePercentage();
+                remainingTimeDisplay.textContent = convertToTime(remainingTime); 
+            }
+        }
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "F6") {
+                hour = 0; 
+                minute = 0; 
+                second = 0; 
+                count = 0; 
+                fullResetGame();
+            }
+        });
+    </script>
+</body>
+</html>
