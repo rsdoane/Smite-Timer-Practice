@@ -251,17 +251,11 @@
             } else {
                 randItem = getRandomItemIndex(); 
                 itemData = remainingItems[randItem];
-                console.log("Remaining Items");
-                console.log(remainingItems.length);
-                console.log("Current Item Name");
-                console.log(itemData.name);
-
                 document.getElementById("item-name").textContent = itemData.name; 
                 const min = itemData.minTime; 
                 const max = itemData.maxTime; 
                 const remainingTime = calculateRemainingTime(min, max);
-                targetNumber = 0;
-                console.log(convertToTime(targetNumber));
+                targetNumber = remainingTime + itemData.itemTime;
                 remainingTimeDisplay.textContent = convertToTime(remainingTime); 
                 totalAttemptsDisplay.textContent = totalAttempts;
                 correctAnswerDisplay.style.display = "none"; 
